@@ -1,6 +1,4 @@
-Sure! Here's an explanation of the project in English using Markdown style:
-
-## Project Overview
+## EventD K8s Operator
 
 The **EventD Operator** is a Kubernetes operator that watches for events happening in a Kubernetes cluster and sends notifications to a specified Telegram channel using a Telegram bot. Additionally, it publishes the events to a Google Cloud Pub/Sub topic for further processing.
 
