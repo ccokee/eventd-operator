@@ -75,18 +75,6 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return reconcile.Result{}, err
 	}
 
-	// Obtener todos los eventos en el clúster o en un namespace específico
-	var eventWatcher watch.Interface
-	if watcher.Spec.Namespace == "all" {
-		eventWatcher, err = clientset.CoreV1().Events("").Watch(ctx, metav1.ListOptions{})
-	} else {
-		eventWatcher, err = clientset.CoreV1().Events(watcher.Spec.Namespace).Watch(ctx, metav1.ListOptions{})
-	}
-	if err != nil {
-		logger.Error(err, "Error al crear el watcher de eventos")
-		return reconcile.Result{}, err
-	}
-
 	// Configurar el bot de Telegram
 	botToken := watcher.Spec.BotToken
 	channelID := watcher.Spec.ChannelID
@@ -98,6 +86,24 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	}
 
 	bot.Debug = true
+
+	// Start a separate goroutine to watch for events and process them continuously
+	go r.processEvents(ctx, bot, clientset, watcher, channelID)
+
+	return ctrl.Result{}, nil
+}
+
+func (r *WatcherReconciler) processEvents(ctx context.Context, bot *tgbotapi.BotAPI, clientset *kubernetes.Clientset, watcher *eventdv1alpha1.Watcher, channelID string) {
+	logger := log.FromContext(ctx)
+
+	// Obtener todos los eventos en el clúster o en un namespace específico
+	var eventWatcher watch.Interface
+	if watcher.Spec.Namespace == "all" {
+		eventWatcher, _ = clientset.CoreV1().Events("").Watch(ctx, metav1.ListOptions{})
+	} else {
+		eventWatcher, _ = clientset.CoreV1().Events(watcher.Spec.Namespace).Watch(ctx, metav1.ListOptions{})
+	}
+
 	// Procesar los eventos y enviarlos al canal de Telegram
 	eventChannel := eventWatcher.ResultChan()
 	for rawEvent := range eventChannel {
@@ -134,8 +140,6 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 
 		logger.Info("Evento enviado al canal de Telegram", "event", event)
 	}
-
-	return ctrl.Result{}, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
