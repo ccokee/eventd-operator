@@ -7,7 +7,6 @@ import (
 
 	eventdv1alpha1 "github.com/ccokee/eventd-operator/api/v1alpha1"
 
-	"cloud.google.com/go/pubsub"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,6 +37,14 @@ type WatcherReconciler struct {
 //+kubebuilder:rbac:groups=eventd.redrvm.cloud,resources=watchers,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=eventd.redrvm.cloud,resources=watchers/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=eventd.redrvm.cloud,resources=watchers/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=events,verbs=get;list;watch
+//+kubebuilder:rbac:groups=eventd.redrvm.cloud,resources=namespaces,verbs=get;list;watch
+//+kubebuilder:rbac:groups=eventd.redrvm.cloud,resources=nodes,verbs=get;list;watch
+//+kubebuilder:rbac:groups=eventd.redrvm.cloud,resources=pods,verbs=get;list;watch
+//+kubebuilder:rbac:groups=eventd.redrvm.cloud,resources=services,verbs=get;list;watch
+//+kubebuilder:rbac:groups=eventd.redrvm.cloud,resources=secrets,verbs=get;list;watch
+//+kubebuilder:rbac:groups=eventd.redrvm.cloud,resources=configmaps,verbs=get;list;watch
+//+kubebuilder:rbac:groups=eventd.redrvm.cloud,resources=serviceaccounts,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -80,18 +87,6 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return reconcile.Result{}, err
 	}
 
-	// Configurar el cliente de pub/sub de GCP
-	projectID := watcher.Spec.ProjectID
-	topicID := watcher.Spec.TopicID
-
-	pubsubClient, err := pubsub.NewClient(ctx, projectID)
-	if err != nil {
-		logger.Error(err, "Error al crear el cliente de pub/sub")
-		return reconcile.Result{}, err
-	}
-
-	topic := pubsubClient.Topic(topicID)
-
 	// Configurar el bot de Telegram
 	botToken := watcher.Spec.BotToken
 	channelID := watcher.Spec.ChannelID
@@ -102,7 +97,8 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		return reconcile.Result{}, err
 	}
 
-	// Procesar los eventos y enviarlos al servicio de pub/sub y al canal de Telegram
+	bot.Debug = true
+	// Procesar los eventos y enviarlos al canal de Telegram
 	eventChannel := eventWatcher.ResultChan()
 	for rawEvent := range eventChannel {
 		event, ok := rawEvent.Object.(*corev1.Event)
@@ -117,14 +113,6 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		eventDescription := event.Message
 		eventAge := event.CreationTimestamp.String()
 
-		// Publicar el mensaje en el tema de pub/sub
-		msg := []byte(fmt.Sprintf("Type: %s, Resource: %s, Description: %s, Age: %s", eventType, eventResource, eventDescription, eventAge))
-		res := topic.Publish(ctx, &pubsub.Message{Data: msg})
-		_, err := res.Get(ctx)
-		if err != nil {
-			logger.Error(err, "Error al publicar el mensaje en el tema de pub/sub")
-		}
-
 		// Enviar el mensaje al canal de Telegram
 		channelIDInt, err := strconv.ParseInt(channelID, 10, 64)
 		if err != nil {
@@ -132,13 +120,13 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			continue
 		}
 		message := tgbotapi.NewMessage(channelIDInt, fmt.Sprintf("Type: %s\nResource: %s\nDescription: %s\nAge: %s", eventType, eventResource, eventDescription, eventAge))
-
+		
 		_, err = bot.Send(message)
 		if err != nil {
 			logger.Error(err, "Error al enviar el mensaje al canal de Telegram")
 		}
 
-		logger.Info("Evento publicado en el tema de pub/sub y enviado al canal de Telegram", "event", event)
+		logger.Info("Evento enviado al canal de Telegram", "event", event)
 	}
 
 	return ctrl.Result{}, nil

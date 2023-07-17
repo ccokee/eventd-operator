@@ -1,6 +1,6 @@
 ## EventD K8s Operator
 
-The **EventD Operator** is a Kubernetes operator that watches for events happening in a Kubernetes cluster and sends notifications to a specified Telegram channel using a Telegram bot. Additionally, it publishes the events to a Google Cloud Pub/Sub topic for further processing.
+The **EventD Operator** is a Kubernetes operator that watches for events happening in a Kubernetes cluster and sends notifications to a specified Telegram channel using a Telegram bot.
 
 The operator is implemented using the **Controller Runtime** framework, which provides a set of libraries and utilities for building Kubernetes controllers. It leverages the **Kubernetes client-go** library to interact with the Kubernetes API and monitor events.
 
@@ -19,9 +19,9 @@ The project follows a typical Go project structure. The important files and dire
 
 The operator works by reconciling `Watcher` objects, which represent the desired state of the system. It continuously monitors events in the Kubernetes cluster and compares them against the desired state specified in the `Watcher` object. If there is a mismatch, it performs the necessary operations to bring the cluster state closer to the desired state.
 
-When a `Watcher` object is created, the operator sets up event monitoring for the specified namespace or the entire cluster. It also configures the Google Cloud Pub/Sub client and the Telegram bot for sending notifications.
+When a `Watcher` object is created, the operator sets up event monitoring for the specified namespace or the entire cluster.
 
-The operator processes the events by retrieving their details, such as type, resource, description, and age. It then publishes the event messages to the configured Google Cloud Pub/Sub topic and sends them to the specified Telegram channel using the Telegram bot.
+The operator processes the events by retrieving their details, such as type, resource, description, and age. It then publishes the event messages and sends them to the specified Telegram channel using the Telegram bot.
 
 ## Prerequisites
 
@@ -29,7 +29,6 @@ To run the EventD Operator, you need the following prerequisites:
 
 - A running Kubernetes cluster.
 - Access to create custom resources and deploy controllers in the cluster.
-- Google Cloud Pub/Sub credentials and a configured topic.
 - A Telegram bot and access to a Telegram channel.
 
 ## Deployment
@@ -52,8 +51,6 @@ kind: Watcher
 metadata:
   name: sample-watcher
 spec:
-  projectID: my-gcp-project
-  topicID: my-pubsub-topic
   botToken: <telegram-bot-token>
   channelID: <telegram-channel-id>
   namespace: all
@@ -62,7 +59,7 @@ spec:
 
 ## Conclusion
 
-The EventD Operator provides a convenient way to monitor events in a Kubernetes cluster and send notifications to a Telegram channel and Google Cloud Pub/Sub topic. It demonstrates the usage of the Controller Runtime framework to build Kubernetes operators and showcases integration with external services.
+The EventD Operator provides a convenient way to monitor events in a Kubernetes cluster and send notifications to a Telegram channel. It demonstrates the usage of the Controller Runtime framework to build Kubernetes operators and showcases integration with external services.
 
 Please refer to the project's documentation for detailed instructions on how to deploy, configure, and use the EventD Operator.
 

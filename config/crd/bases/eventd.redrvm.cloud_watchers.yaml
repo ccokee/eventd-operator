@@ -42,16 +42,10 @@ spec:
               namespace:
                 description: Campos adicionales para el manejo de eventos
                 type: string
-              projectID:
-                type: string
-              topicID:
-                type: string
             required:
             - botToken
             - channelID
             - namespace
-            - projectID
-            - topicID
             type: object
           status:
             description: WatcherStatus defines the observed state of Watcher

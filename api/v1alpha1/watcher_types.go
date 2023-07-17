@@ -29,8 +29,6 @@ type WatcherSpec struct {
 	Namespace string `json:"namespace"`
 	BotToken  string `json:"botToken"`
 	ChannelID string `json:"channelID"`
-	ProjectID string `json:"projectID"`
-	TopicID   string `json:"topicID"`
 }
 
 // WatcherStatus defines the observed state of Watcher

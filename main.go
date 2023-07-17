@@ -67,6 +67,14 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
+	setupLog.Info("Starting the operator")
+
+	// Inicializar el esquema del operador
+	scheme := runtime.NewScheme()
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(eventdv1alpha1.AddToScheme(scheme))
+
+	// Crear el administrador del controlador
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		MetricsBindAddress:     metricsAddr,
@@ -74,32 +82,28 @@ func main() {
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
 		LeaderElectionID:       "6b7f698c.redrvm.cloud",
-		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
-		// when the Manager ends. This requires the binary to immediately end when the
-		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
-		// speeds up voluntary leader transitions as the new leader don't have to wait
-		// LeaseDuration time first.
-		//
-		// In the default scaffold provided, the program ends immediately after
-		// the manager stops, so would be fine to enable this option. However,
-		// if you are doing or is intended to do any operation such as perform cleanups
-		// after the manager stops then its usage might be unsafe.
-		// LeaderElectionReleaseOnCancel: true,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
 		os.Exit(1)
 	}
 
-	if err = (&controllers.WatcherReconciler{
+	// Crear el controlador del evento
+	eventController := &controllers.WatcherReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	}
+
+	// Ejecutar el operador en una goroutine
+	go runOperator(context.TODO(), eventController)
+
+	// Registrar el controlador del evento con el administrador del controlador
+	if err = eventController.SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Watcher")
 		os.Exit(1)
 	}
-	//+kubebuilder:scaffold:builder
 
+	// Añadir comprobaciones de salud
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {
 		setupLog.Error(err, "unable to set up health check")
 		os.Exit(1)
@@ -109,11 +113,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Iniciar el administrador del controlador
+	err = mgr.Start(ctrl.SetupSignalHandler())
 	if err != nil {
-		fmt.Printf("error executing operator: %v", err)
+		fmt.Printf("Error al iniciar el administrador del controlador: %v", err)
 		os.Exit(1)
 	}
-
 }
 
 func runOperator(ctx context.Context, eventController *controllers.WatcherReconciler) {

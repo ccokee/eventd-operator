@@ -6,6 +6,70 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - serviceaccounts
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - eventd.redrvm.cloud
   resources:
   - watchers
