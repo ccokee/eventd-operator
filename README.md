@@ -1,6 +1,6 @@
 ## EventD K8s Operator
 
-The **EventD Operator** is a Kubernetes operator that watches for events happening in a Kubernetes cluster and sends notifications to a specified Telegram channel using a Telegram bot.
+The **EventD Operator** is a Kubernetes operator that watches for events happening in a Kubernetes cluster and sends notifications to a specified Telegram channel using a Telegram bot and filtering by message type (for now).
 
 The operator is implemented using the **Controller Runtime** framework, which provides a set of libraries and utilities for building Kubernetes controllers. It leverages the **Kubernetes client-go** library to interact with the Kubernetes API and monitor events.
 
@@ -53,6 +53,7 @@ metadata:
 spec:
   botToken: <telegram-bot-token>
   channelID: <telegram-channel-id>
+  allowedMessageTypes: ["Error","Warning"]
   namespace: all
 
 ```

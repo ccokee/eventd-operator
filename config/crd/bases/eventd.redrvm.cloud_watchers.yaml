@@ -35,6 +35,10 @@ spec:
           spec:
             description: WatcherSpec defines the desired state of Watcher
             properties:
+              allowedMessageTypes:
+                items:
+                  type: string
+                type: array
               botToken:
                 type: string
               channelID:
@@ -43,6 +47,7 @@ spec:
                 description: Campos adicionales para el manejo de eventos
                 type: string
             required:
+            - allowedMessageTypes
             - botToken
             - channelID
             - namespace

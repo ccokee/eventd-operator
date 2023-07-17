@@ -26,9 +26,15 @@ import (
 // WatcherSpec defines the desired state of Watcher
 type WatcherSpec struct {
 	// Campos adicionales para el manejo de eventos
-	Namespace string `json:"namespace"`
-	BotToken  string `json:"botToken"`
-	ChannelID string `json:"channelID"`
+	Namespace           string   `json:"namespace"`
+	BotToken            string   `json:"botToken"`
+	ChannelID           string   `json:"channelID"`
+	AllowedMessageTypes []string `json:"allowedMessageTypes"`
+}
+
+// MessageType defines a type of message that can be captured
+type MessageType struct {
+	Name string `json:"name"`
 }
 
 // WatcherStatus defines the observed state of Watcher

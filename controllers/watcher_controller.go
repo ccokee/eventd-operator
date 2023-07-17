@@ -113,6 +113,12 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 		eventDescription := event.Message
 		eventAge := event.CreationTimestamp.String()
 
+		// Comprobar si el tipo de mensaje del evento está permitido
+		if !isMessageTypeAllowed(eventType, watcher.Spec.AllowedMessageTypes) {
+			// El tipo de mensaje no está permitido, omitir el envío
+			continue
+		}
+
 		// Enviar el mensaje al canal de Telegram
 		channelIDInt, err := strconv.ParseInt(channelID, 10, 64)
 		if err != nil {
@@ -120,7 +126,7 @@ func (r *WatcherReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 			continue
 		}
 		message := tgbotapi.NewMessage(channelIDInt, fmt.Sprintf("Type: %s\nResource: %s\nDescription: %s\nAge: %s", eventType, eventResource, eventDescription, eventAge))
-		
+
 		_, err = bot.Send(message)
 		if err != nil {
 			logger.Error(err, "Error al enviar el mensaje al canal de Telegram")
@@ -137,4 +143,13 @@ func (r *WatcherReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&eventdv1alpha1.Watcher{}).
 		Complete(r)
+}
+
+func isMessageTypeAllowed(messageType string, allowedMessageTypes []string) bool {
+	for _, allowedType := range allowedMessageTypes {
+		if allowedType == messageType {
+			return true
+		}
+	}
+	return false
 }
