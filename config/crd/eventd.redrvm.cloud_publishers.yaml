@@ -1,0 +1,67 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.11.1
+  creationTimestamp: null
+  name: publishers.eventd.redrvm.cloud
+spec:
+  group: eventd.redrvm.cloud
+  names:
+    kind: Publisher
+    listKind: PublisherList
+    plural: publishers
+    singular: publisher
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Publisher is the Schema for the publishers API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PublisherSpec defines the desired state of Publisher
+            properties:
+              allowedMessageTypes:
+                description: AllowedMessageTypes is a list of allowed event types
+                  to publish to the Pub/Sub topic.
+                items:
+                  type: string
+                type: array
+              namespace:
+                description: Namespace is the Kubernetes namespace for which events
+                  are published to the Pub/Sub topic.
+                type: string
+              projectID:
+                description: ProjectID is the GCP project ID where the Pub/Sub topic
+                  exists.
+                type: string
+              topicID:
+                description: TopicID is the ID of the Pub/Sub topic.
+                type: string
+            required:
+            - namespace
+            - projectID
+            - topicID
+            type: object
+          status:
+            description: PublisherStatus defines the observed state of Publisher
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -48,6 +48,32 @@ rules:
 - apiGroups:
   - eventd.redrvm.cloud
   resources:
+  - publishers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - publishers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - publishers/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
   - secrets
   verbs:
   - get

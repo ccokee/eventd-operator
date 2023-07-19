@@ -1,4 +1,5 @@
 ## Append samples you want in your CSV to this file as resources ##
 resources:
 - eventd_v1alpha1_watcher.yaml
+- eventd_v1alpha1_publisher.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

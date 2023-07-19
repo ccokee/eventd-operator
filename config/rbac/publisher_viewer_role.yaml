@@ -1,0 +1,27 @@
+# permissions for end users to view publishers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: publisher-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: eventd-operator
+    app.kubernetes.io/part-of: eventd-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: publisher-viewer-role
+rules:
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - publishers
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - eventd.redrvm.cloud
+  resources:
+  - publishers/status
+  verbs:
+  - get

@@ -1,6 +1,10 @@
-## EventD K8s Operator
+# EventD Kubernetes Operator
 
-The **EventD Operator** is a Kubernetes operator that watches for events happening in a Kubernetes cluster and sends notifications to a specified Telegram channel using a Telegram bot and filtering by message type (for now).
+The **EventD Operator** is a Kubernetes operator that watches for events happening in a Kubernetes cluster and provides two main functionalities:
+
+1. Sends event notifications to a specified Telegram channel using a Telegram bot, filtering messages by type (e.g., "Error," "Warning").
+
+2. Publishes Kubernetes events filtered to Google Cloud Pub/Sub topics using a custom resource called "Publisher."
 
 The operator is implemented using the **Controller Runtime** framework, which provides a set of libraries and utilities for building Kubernetes controllers. It leverages the **Kubernetes client-go** library to interact with the Kubernetes API and monitor events.
 
@@ -9,19 +13,25 @@ The operator is implemented using the **Controller Runtime** framework, which pr
 The project follows a typical Go project structure. The important files and directories are as follows:
 
 - `api/`: Contains the API definitions for custom resources used by the operator.
+  - `v1alpha1/`: Contains the custom resource definitions for "Watcher" and "Publisher."
 - `config/`: Contains the Kubernetes configurations for deploying the operator.
 - `controllers/`: Contains the main implementation of the operator logic.
   - `watcher_controller.go`: Defines the WatcherReconciler that reconciles Watcher objects.
+  - `publisher_controller.go`: Defines the PublisherReconciler that reconciles Publisher objects.
 - `main.go`: The main entry point of the operator.
 - `go.mod` and `go.sum`: Files that specify the Go module and its dependencies.
 
 ## How It Works
 
-The operator works by reconciling `Watcher` objects, which represent the desired state of the system. It continuously monitors events in the Kubernetes cluster and compares them against the desired state specified in the `Watcher` object. If there is a mismatch, it performs the necessary operations to bring the cluster state closer to the desired state.
+### Telegram Notification Functionality
 
-When a `Watcher` object is created, the operator sets up event monitoring for the specified namespace or the entire cluster.
+The operator works by reconciling `Watcher` objects, which represent the desired state of the system for Telegram notifications. When a `Watcher` object is created, the operator sets up event monitoring for the specified namespace or the entire cluster. It then processes the events, retrieves their details, and sends notifications to the specified Telegram channel using the provided Telegram bot.
 
-The operator processes the events by retrieving their details, such as type, resource, description, and age. It then publishes the event messages and sends them to the specified Telegram channel using the Telegram bot.
+### Google Cloud Pub/Sub Functionality
+
+The operator also supports the publishing of Kubernetes events to Google Cloud Pub/Sub topics. This functionality is achieved through the custom resource "Publisher."
+
+When a `Publisher` object is created, the operator ensures the proper configuration is provided, including the GCP service account key, project ID, Pub/Sub topic, and allowed message types. The operator then processes Kubernetes events, filters them based on allowed message types, and publishes the event data to the specified GCP Pub/Sub topic.
 
 ## Prerequisites
 
@@ -29,7 +39,8 @@ To run the EventD Operator, you need the following prerequisites:
 
 - A running Kubernetes cluster.
 - Access to create custom resources and deploy controllers in the cluster.
-- A Telegram bot and access to a Telegram channel.
+- A Telegram bot and access to a Telegram channel for notifications.
+- Google Cloud Platform (GCP) credentials with the necessary permissions to publish messages to Pub/Sub topics.
 
 ## Deployment
 
@@ -41,11 +52,11 @@ To deploy the EventD Operator, follow these steps:
 
 ## Customization
 
-You can customize the behavior of the operator by modifying the `Watcher` custom resource definition (CRD). The CRD allows you to specify the project ID, topic ID, bot token, channel ID, and other settings for the operator.
+You can customize the behavior of the operator by modifying the `Watcher` and `Publisher` custom resource definitions (CRDs). The CRDs allow you to specify various settings, such as Telegram bot token, Telegram channel ID, allowed message types, GCP service account key, GCP project ID, Pub/Sub topic, and more.
 
-## Example CRD
+## Example Watcher CRD
 
-```
+```yaml
 apiVersion: eventd.redrvm.cloud/v1alpha1
 kind: Watcher
 metadata:
@@ -53,22 +64,33 @@ metadata:
 spec:
   botToken: <telegram-bot-token>
   channelID: <telegram-channel-id>
-  allowedMessageTypes: ["Error","Warning"]
+  allowedMessageTypes: ["Error", "Warning"]
   namespace: all
+```
 
+## Example Publisher CRD
+
+```yaml
+apiVersion: eventd.redrvm.cloud/v1alpha1
+kind: Publisher
+metadata:
+  name: sample-publisher
+spec:
+  gcpsaKey: <base64-encoded-gcp-service-account-key>
+  projectID: <gcp-project-id>
+  topic: <gcp-pubsub-topic>
+  allowedMessageTypes: ["Error", "Warning"]
 ```
 
 ## Conclusion
 
-The EventD Operator provides a convenient way to monitor events in a Kubernetes cluster and send notifications to a Telegram channel. It demonstrates the usage of the Controller Runtime framework to build Kubernetes operators and showcases integration with external services.
+The EventD Operator provides a convenient way to monitor events in a Kubernetes cluster and send notifications to a Telegram channel. Additionally, it offers the capability to publish filtered Kubernetes events to Google Cloud Pub/Sub topics. The project demonstrates the usage of the Controller Runtime framework to build Kubernetes operators and showcases integration with external services like Telegram and GCP Pub/Sub.
 
-Please refer to the project's documentation for detailed instructions on how to deploy, configure, and use the EventD Operator.
-
-If you have any further questions or need assistance, please feel free to reach out.
+Author: Jorge Leopoldo Curbera Rodriguez
 
 MIT License
 
-Copyright (c) [year] [project owner]
+Copyright (c) [2023] [Jorge Leopoldo Curbera Rodriguez]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
